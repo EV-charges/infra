@@ -1,0 +1,38 @@
+
+name: filebeat
+
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      templates:
+        - condition:
+            contains:
+              docker.container.name: chargemap_parser
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+        - condition:
+            contains:
+              docker.container.name: electromaps_parser
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+
+processors:
+  - add_cloud_metadata: ~
+
+output.logstash:
+  hosts: [ logstash:5044 ]
+
+
+
+http:
+  enabled: true
+  host: 0.0.0.0
